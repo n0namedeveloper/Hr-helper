@@ -1,120 +1,130 @@
 # HR-Breaker
 
-Resume optimization tool that transforms any resume into a job-specific, ATS-friendly PDF.
+Инструмент для оптимизации резюме под конкретную вакансию с проверками на ATS-совместимость и правдоподобность.
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 
-## Features
+## Что делает проект
 
-- **Any format in** - LaTeX, plain text, markdown, HTML, PDF
-- **Optimized PDF out** - Single-page, professionally formatted
-- **LLM-powered optimization** - Tailors content to job requirements
-- **Minimal changes** - Preserves your content, only restructures for fit
-- **No fabrication** - Hallucination detection prevents made-up claims
-- **Opinionated formatting** - Follows proven resume guidelines (one page, no fluff, etc.)
-- **Multi-filter validation** - ATS simulation, keyword matching, structure checks
-- **Web UI + CLI** - Streamlit dashboard or command-line
-- **Debug mode** - Inspect optimization iterations
+- принимает резюме (txt/md/tex/html/pdf)
+- принимает описание вакансии (URL, файл или текст)
+- генерирует адаптированное резюме
+- прогоняет его через набор фильтров (длина, ключевые слова, анти-халлюцинации, ATS-check)
+- при провале фильтров пересобирает резюме с учётом фидбэка
+- сохраняет финальный PDF
 
-## How It Works
+## Технологии
 
-1. Upload resume in any text format (content source only)
-2. Provide job posting URL or text description
-3. LLM extracts content and generates optimized HTML resume
-4. System runs internal filters (ATS simulation, keyword matching, hallucination detection)
-5. If filters reject, regenerates using feedback
-6. When all checks pass, renders HTML→PDF via WeasyPrint
+- Python 3.10+
+- Pydantic-AI + Perplexity API
+- Streamlit (Web UI)
+- Click (CLI)
+- WeasyPrint (HTML → PDF)
+- PyMuPDF
 
-## Quick Start
+## Быстрый старт
+
+### 1) Установка зависимостей
 
 ```bash
-# Install
 uv sync
+```
 
-# Configure
+### 2) Настройка переменных окружения
+
+```bash
 cp .env.example .env
-# Edit .env and add your GOOGLE_API_KEY
+```
 
-# Run web UI
+Заполните в .env:
+
+```dotenv
+PERPLEXITY_API_KEY=your_key_here
+```
+
+### 3) Запуск Web UI
+
+```bash
 uv run streamlit run src/hr_breaker/main.py
 ```
 
-## Usage
-
-### Web UI
-
-Launch with `uv run streamlit run src/hr_breaker/main.py`
-
-1. Paste or upload resume
-2. Enter job URL or description
-3. Click optimize
-4. Download PDF
-
-### CLI
+## Использование CLI
 
 ```bash
-# From URL
+# URL вакансии
 uv run hr-breaker optimize resume.txt https://example.com/job
 
-# From job description file
+# Вакансия из файла
 uv run hr-breaker optimize resume.txt job.txt
 
-# Debug mode (saves iterations)
+# Debug-режим (сохраняет итерации)
 uv run hr-breaker optimize resume.txt job.txt -d
 
-# Lenient mode - relaxes content constraints but still prevents fabricating experience. Use with caution!
+# Последовательный режим фильтров
+uv run hr-breaker optimize resume.txt job.txt --seq
+
+# Lenient-режим
 uv run hr-breaker optimize resume.txt job.txt --no-shame
 
-# List generated PDFs
+# История сгенерированных PDF
 uv run hr-breaker list
 ```
 
-## Output
+## Куда сохраняются результаты
 
-- Final PDFs: `output/<name>_<company>_<role>.pdf`
-- Debug iterations: `output/debug_<company>_<role>/`
-- Records: `output/index.json`
+- Финальные PDF: output/
+- Debug-артефакты: output/debug_<company>_<role>/
+- Индекс метаданных: output/index.json
 
-## Configuration
+## Конфигурация
 
-Copy `.env.example` to `.env` and set `GOOGLE_API_KEY` (required). See `.env.example` for all available options.
+Все основные параметры находятся в .env.example:
 
----
+- PERPLEXITY_API_KEY — обязательный
+- PERPLEXITY_PRO_MODEL / PERPLEXITY_FLASH_MODEL
+- пороги фильтров FILTER_*
+- ограничения длины RESUME_*
+- настройки скрейпера SCRAPER_*
 
-## Architecture
+## Архитектура (кратко)
 
-```
 src/hr_breaker/
-├── agents/          # Pydantic-AI agents (optimizer, reviewer, etc.)
-├── filters/         # Validation plugins (ATS, keywords, hallucination)
-├── services/        # Rendering, scraping, caching
-│   └── scrapers/    # Job scraper implementations
-├── models/          # Pydantic data models
-├── orchestration.py # Core optimization loop
-├── main.py          # Streamlit UI
-└── cli.py           # Click CLI
-```
 
-**Filters** (run by priority):
+- agents/ — LLM-агенты
+- filters/ — плагинные проверки качества
+- services/ — скрейпинг, рендер, кеш
+- models/ — Pydantic-модели
+- orchestration.py — основной цикл оптимизации
+- main.py — Streamlit UI
+- cli.py — CLI-команды
 
-- 0: ContentLengthChecker - Size check
-- 1: DataValidator - HTML structure validation
-- 3: HallucinationChecker - Detect fabricated claims not supported by original resume
-- 4: KeywordMatcher - TF-IDF matching
-- 5: LLMChecker - Visual formatting check and LLM-based ATS simulation
-- 6: VectorSimilarityMatcher - Semantic similarity
-- 7: AIGeneratedChecker - Detect AI-sounding text
-
-## Development
+## Разработка и тесты
 
 ```bash
-# Run tests
-uv run pytest tests/
+# Все тесты (без live API)
+uv run pytest tests/ -q
 
-# Install dev dependencies
-uv sync --group dev
-
-# Run live API tests (opt-in)
+# Live API тесты (опционально)
 RUN_LIVE_API_TESTS=1 uv run pytest tests/test_utils.py
+```
+
+PowerShell:
+
+```powershell
 $env:RUN_LIVE_API_TESTS='1'; uv run pytest tests/test_utils.py
 ```
+
+## Частые проблемы
+
+- Ошибка `PERPLEXITY_API_KEY not set`
+	- проверьте .env и перезапустите процесс
+
+- Пустой/неполный текст вакансии по URL
+	- сайт может быть под Cloudflare; вставьте текст вакансии вручную
+
+- WeasyPrint не генерирует PDF
+	- проверьте корректность HTML/CSS шаблонов в templates/
+
+## Лицензия
+
+MIT, см. файл LICENSE.
