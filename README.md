@@ -1,110 +1,110 @@
 # HR-Breaker
 
-Инструмент для оптимизации резюме под конкретную вакансию с проверками на ATS-совместимость и правдоподобность.
+A resume optimization tool that tailors resumes to specific job postings with ATS and credibility checks.
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 
-## Что делает проект
+## What the project does
 
-- принимает резюме (txt/md/tex/html/pdf)
-- принимает описание вакансии (URL, файл или текст)
-- генерирует адаптированное резюме
-- прогоняет его через набор фильтров (длина, ключевые слова, анти-халлюцинации, ATS-check)
-- при провале фильтров пересобирает резюме с учётом фидбэка
-- сохраняет финальный PDF
+- accepts resume input (txt/md/tex/html/pdf)
+- accepts job description input (URL, file, or raw text)
+- generates a job-tailored resume
+- validates it through multiple filters (length, keywords, anti-hallucination, ATS check)
+- regenerates with feedback if filters fail
+- saves the final PDF
 
-## Технологии
+## Tech stack
 
 - Python 3.10+
 - Pydantic-AI + Perplexity API
-- Streamlit (Web UI)
+- Streamlit (web UI)
 - Click (CLI)
 - WeasyPrint (HTML → PDF)
 - PyMuPDF
 
-## Быстрый старт
+## Quick start
 
-### 1) Установка зависимостей
+### 1) Install dependencies
 
 ```bash
 uv sync
 ```
 
-### 2) Настройка переменных окружения
+### 2) Configure environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Заполните в .env:
+Set this in .env:
 
 ```dotenv
 PERPLEXITY_API_KEY=your_key_here
 ```
 
-### 3) Запуск Web UI
+### 3) Run the web UI
 
 ```bash
 uv run streamlit run src/hr_breaker/main.py
 ```
 
-## Использование CLI
+## CLI usage
 
 ```bash
-# URL вакансии
+# Job URL
 uv run hr-breaker optimize resume.txt https://example.com/job
 
-# Вакансия из файла
+# Job description from a file
 uv run hr-breaker optimize resume.txt job.txt
 
-# Debug-режим (сохраняет итерации)
+# Debug mode (saves iterations)
 uv run hr-breaker optimize resume.txt job.txt -d
 
-# Последовательный режим фильтров
+# Sequential filter mode
 uv run hr-breaker optimize resume.txt job.txt --seq
 
-# Lenient-режим
+# Lenient mode
 uv run hr-breaker optimize resume.txt job.txt --no-shame
 
-# История сгенерированных PDF
+# List generated PDFs
 uv run hr-breaker list
 ```
 
-## Куда сохраняются результаты
+## Output locations
 
-- Финальные PDF: output/
-- Debug-артефакты: output/debug_<company>_<role>/
-- Индекс метаданных: output/index.json
+- Final PDFs: output/
+- Debug artifacts: output/debug_<company>_<role>/
+- Metadata index: output/index.json
 
-## Конфигурация
+## Configuration
 
-Все основные параметры находятся в .env.example:
+Main settings are in .env.example:
 
-- PERPLEXITY_API_KEY — обязательный
+- PERPLEXITY_API_KEY — required
 - PERPLEXITY_PRO_MODEL / PERPLEXITY_FLASH_MODEL
-- пороги фильтров FILTER_*
-- ограничения длины RESUME_*
-- настройки скрейпера SCRAPER_*
+- filter thresholds FILTER_*
+- resume length limits RESUME_*
+- scraper settings SCRAPER_*
 
-## Архитектура (кратко)
+## Architecture (short)
 
 src/hr_breaker/
 
-- agents/ — LLM-агенты
-- filters/ — плагинные проверки качества
-- services/ — скрейпинг, рендер, кеш
-- models/ — Pydantic-модели
-- orchestration.py — основной цикл оптимизации
+- agents/ — LLM agents
+- filters/ — pluggable quality checks
+- services/ — scraping, rendering, cache
+- models/ — Pydantic models
+- orchestration.py — core optimization loop
 - main.py — Streamlit UI
-- cli.py — CLI-команды
+- cli.py — CLI commands
 
-## Разработка и тесты
+## Development and tests
 
 ```bash
-# Все тесты (без live API)
+# All tests (without live API)
 uv run pytest tests/ -q
 
-# Live API тесты (опционально)
+# Live API tests (optional)
 RUN_LIVE_API_TESTS=1 uv run pytest tests/test_utils.py
 ```
 
@@ -114,17 +114,17 @@ PowerShell:
 $env:RUN_LIVE_API_TESTS='1'; uv run pytest tests/test_utils.py
 ```
 
-## Частые проблемы
+## Common issues
 
-- Ошибка `PERPLEXITY_API_KEY not set`
-	- проверьте .env и перезапустите процесс
+- Error `PERPLEXITY_API_KEY not set`
+	- check .env and restart the process
 
-- Пустой/неполный текст вакансии по URL
-	- сайт может быть под Cloudflare; вставьте текст вакансии вручную
+- Empty/incomplete job text from URL
+	- the site may be behind Cloudflare; paste the job description manually
 
-- WeasyPrint не генерирует PDF
-	- проверьте корректность HTML/CSS шаблонов в templates/
+- WeasyPrint fails to generate PDF
+	- verify HTML/CSS templates in templates/
 
-## Лицензия
+## License
 
-MIT, см. файл LICENSE.
+MIT, see LICENSE.
