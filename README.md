@@ -1,4 +1,4 @@
-# HR-Breaker
+# HR-helper
 
 A resume optimization tool that tailors resumes to specific job postings with ATS and credibility checks.
 
